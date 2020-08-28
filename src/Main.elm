@@ -13,20 +13,21 @@ main =
 -- MODEL
 type GridElement = Empty | Cross | Circle
 type Turn = Circles | Crosses 
-type alias Model = { turn: Turn, elements : Array GridElement }
+type alias GridElements = Array GridElement
+type alias Model = { turn: Turn, grid : GridElements }
 
 init : Model
 init = Model Circles (Array.fromList 
-                      ([Empty, Empty, Empty,
-                      Empty, Empty, Empty,
-                      Empty, Empty, Empty ]))
+                        ([Empty, Empty, Empty,
+                          Empty, Empty, Empty,
+                          Empty, Empty, Empty ]))
 
 -- UPDATE
 type Msg
   = Click Int
   | Reset
 
-gridElementEmpty:  Int -> Array GridElement -> Bool
+gridElementEmpty:  Int -> GridElements -> Bool
 gridElementEmpty i grid =
   (Array.get i grid) == Just Empty 
        
@@ -37,10 +38,10 @@ update msg model =
     Reset ->
       init
     Click i ->
-      if model.turn == Circles && (gridElementEmpty i model.elements) then
-        {model  | turn = Crosses, elements = (Array.set i Circle model.elements) }
-      else if (gridElementEmpty i model.elements) then
-        {model  | turn = Circles, elements = (Array.set i Cross model.elements) }
+      if model.turn == Circles && (gridElementEmpty i model.grid) then
+        {model  | turn = Crosses, grid = (Array.set i Circle model.grid) }
+      else if (gridElementEmpty i model.grid) then
+        {model  | turn = Circles, grid = (Array.set i Cross model.grid) }
       else 
         model
 
@@ -73,9 +74,10 @@ view : Model -> Html Msg
 view model =
   div []  
   (List.append
-    (List.concat (List.indexedMap drawGrid (Array.toList model.elements)))
+      (List.concat 
+        <| List.indexedMap drawGrid 
+        <| Array.toList model.grid)
     [
       div [] [ text ("Turn : " ++ (turnToString model.turn))],
       button [ onClick Reset ] [ text "Reset" ]
-    ]
-  )
+    ])
