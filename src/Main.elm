@@ -15,11 +15,16 @@ type GridElement = Empty | Cross | Circle
 type Turn = Circles | Crosses 
 type Winner = CircleWinner | CrossWinner | NoWinner
 type alias GridElements = Array GridElement
-type alias Model = { turn: Turn, winner : Winner, grid : GridElements }
+type alias Model = { turn: Turn, winner : Winner, crossWins : Int, circlesWins : Int , grid : GridElements}
 type alias WinningPositions = List (List Int)
 
 init : Model
-init = Model Circles NoWinner (Array.fromList 
+init = Model Circles NoWinner 0 0 (Array.fromList 
+                        ([Empty, Empty, Empty,
+                          Empty, Empty, Empty,
+                          Empty, Empty, Empty ]))
+
+reset model = Model Circles NoWinner model.crossWins model.circlesWins (Array.fromList 
                         ([Empty, Empty, Empty,
                           Empty, Empty, Empty,
                           Empty, Empty, Empty ]))
@@ -55,7 +60,7 @@ update : Msg -> Model -> Model
 update msg model =
   case msg of
     Reset ->
-      init
+      reset model
     Click i ->
       let isSlotEmpty = (gridElementEmpty i model.grid)
           circleTurn =  model.turn == Circles
@@ -64,12 +69,14 @@ update msg model =
         if circleTurn && isSlotEmpty && not hasAnybodyWon then
           model 
                 |> (\m -> {m | turn = Crosses, grid = (Array.set i Circle m.grid)}) --update the grid
-                |> (\m -> {m | winner = (checkWon Circle CircleWinner m.grid)})     --update the winner
+                |> (\m -> {m | winner = (checkWon Circle CircleWinner m.grid)}) --update the winner
+                |> (\m -> if m.winner == CircleWinner then {m | circlesWins = m.circlesWins + 1} else m)  
 
         else if isSlotEmpty && not hasAnybodyWon then
            model 
                 |> (\m -> {m | turn = Circles, grid = (Array.set i Cross m.grid)}) 
                 |> (\m -> {m | winner = (checkWon Cross CrossWinner m.grid)})
+                |> (\m -> if m.winner == CrossWinner then {m | crossWins = m.crossWins + 1} else m)  
         else 
           model
 
@@ -132,6 +139,8 @@ view model =
       [
         div [] [ text ("Turn : " ++ (turnToString model.turn))],
         div [] [ text (winnerToString model.winner model.grid)],
+        div [] [ text ("Victory Crosses : " ++ (String.fromInt model.crossWins))],
+        div [] [ text ("Victory Circles : " ++ (String.fromInt model.circlesWins))],    
         button [ onClick Reset ] [ text "Reset" ]
       ]
     ])
