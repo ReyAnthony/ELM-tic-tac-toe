@@ -1,0 +1,15 @@
+language: elm
+elm:
+  - elm0.19.0
+script:
+  - rm -rf ~/.elm
+  - rm -rf ./elm-stuff
+  - elm make src/Main.elm 
+  - cp -a src/. ./
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  local_dir: ./
+  on:
+    branch: master  
