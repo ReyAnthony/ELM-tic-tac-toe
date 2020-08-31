@@ -13,14 +13,22 @@ main =
 -- MODEL
 type GridElement = Empty | Cross | Circle
 type Turn = Circles | Crosses 
+type Winner = CircleWinner | CrossWinner | NoWinner
 type alias GridElements = Array GridElement
-type alias Model = { turn: Turn, grid : GridElements }
+type alias Model = { turn: Turn, winner : Winner, grid : GridElements }
+type alias WinningPositions = List (List Int)
 
 init : Model
-init = Model Circles (Array.fromList 
+init = Model Circles NoWinner (Array.fromList 
                         ([Empty, Empty, Empty,
                           Empty, Empty, Empty,
                           Empty, Empty, Empty ]))
+
+winningPositions : WinningPositions
+winningPositions = [[1, 5, 9], [3, 7, 9], 
+                    [1, 2, 3], [4, 5, 6], 
+                    [7, 8, 9], [1, 4, 7], 
+                    [2, 5, 8], [3, 6, 7]]
 
 -- UPDATE
 type Msg
@@ -30,20 +38,41 @@ type Msg
 gridElementEmpty:  Int -> GridElements -> Bool
 gridElementEmpty i grid =
   (Array.get i grid) == Just Empty 
-       
 
+checkWon: GridElement -> Winner -> GridElements -> Winner
+checkWon element winner grid = 
+  let posList = List.map (\tuple -> (Tuple.first tuple)) --get index from tuple
+                <| List.filter (\tuple -> (Tuple.second tuple) == element) -- get only X, O or empty
+                <| List.indexedMap (\i e -> (i + 1, e)) (Array.toList grid) -- make tuple (+1 because we start from 1)
+
+  -- filter the intList by removing anything that is not in the winning list then check if == 3                         
+  in
+     -- test if any list in winningPosition is contained in our list      
+     if List.any (\winningList ->  List.length (List.filter (\e -> List.member e winningList) posList) == 3) winningPositions then 
+        winner
+     else 
+        NoWinner   
 update : Msg -> Model -> Model
 update msg model =
   case msg of
     Reset ->
       init
     Click i ->
-      if model.turn == Circles && (gridElementEmpty i model.grid) then
-        {model  | turn = Crosses, grid = (Array.set i Circle model.grid) }
-      else if (gridElementEmpty i model.grid) then
-        {model  | turn = Circles, grid = (Array.set i Cross model.grid) }
-      else 
-        model
+      let isSlotEmpty = (gridElementEmpty i model.grid)
+          circleTurn =  model.turn == Circles
+          hasAnybodyWon = (model.winner == CircleWinner || model.winner == CrossWinner)
+      in
+        if circleTurn && isSlotEmpty && not hasAnybodyWon then
+          model 
+                |> (\m -> {m | turn = Crosses, grid = (Array.set i Circle m.grid)}) --update the grid
+                |> (\m -> {m | winner = (checkWon Circle CircleWinner m.grid)})     --
+
+        else if isSlotEmpty && not hasAnybodyWon then
+           model 
+                |> (\m -> {m | turn = Circles, grid = (Array.set i Cross m.grid)}) 
+                |> (\m -> {m | winner = (checkWon Cross CrossWinner m.grid)})
+        else 
+          model
 
 -- VIEW
 gridElementToString: GridElement -> String
@@ -70,6 +99,12 @@ turnToString turn =
     Circles -> "Circles"
     Crosses -> "Crosses" 
 
+winnerToString winner =
+  case winner of
+    NoWinner -> "Nobody"
+    CircleWinner -> "Circles"
+    CrossWinner -> "Crosses"    
+
 view : Model -> Html Msg
 view model =
   div []  
@@ -79,5 +114,6 @@ view model =
         <| Array.toList model.grid)
     [
       div [] [ text ("Turn : " ++ (turnToString model.turn))],
+      div [] [ text ("Winner : " ++ (winnerToString model.winner))],
       button [ onClick Reset ] [ text "Reset" ]
     ])
