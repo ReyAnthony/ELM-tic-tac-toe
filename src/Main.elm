@@ -41,6 +41,7 @@ winningPositions = [[1, 5, 9], [3, 5, 7], --diagonals
 type Msg
   = Click Int
   | Reset
+  | ResetAll
 
 gridElementEmpty:  Int -> GridElements -> Bool
 gridElementEmpty i grid =
@@ -62,6 +63,8 @@ checkWon element winner grid =
 update : Msg -> Model -> Model
 update msg model =
   case msg of
+    ResetAll -> 
+      init
     Reset ->
       reset model
     Click i ->
@@ -144,6 +147,7 @@ view model =
         div [] [ text (winnerToString model.winner model.grid)],
         div [] [ text ("Victory Crosses : " ++ (String.fromInt model.crossWins))],
         div [] [ text ("Victory Circles : " ++ (String.fromInt model.circlesWins))],    
-        button [ onClick Reset ] [ text "Reset" ]
+        button [ onClick Reset ] [ text "Next turn" ],
+        button [ onClick ResetAll ] [ text "Reset All" ]
       ]
     ])
