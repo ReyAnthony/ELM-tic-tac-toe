@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Array exposing (Array)
 import Browser
-import Html exposing (Html, button, div, text, img, br)
+import Html exposing (Html, button, div, text, img, br, h1)
 import Html.Attributes exposing (src, width, height, style)
 import Html.Events exposing (onClick)
 
@@ -120,13 +120,18 @@ winnerToString winner grid  =
 
 view : Model -> Html Msg
 view model =
-  div []  
-  (List.append
-      (List.concat 
-        <| List.indexedMap drawGrid 
-        <| Array.toList model.grid)
+  div [style "position" "absolute", style "top" "50%", style "left" "50%", style "margin-right" "-50%", style "transform" "translate(-50%, -50%)"]  
+  (List.concat
     [
-      div [] [ text ("Turn : " ++ (turnToString model.turn))],
-      div [] [ text (winnerToString model.winner model.grid)],
-      button [ onClick Reset ] [ text "Reset" ]
+      [
+        h1 [] [ text("Tic Tac Toe") ]
+      ],
+        (List.concat 
+          <| List.indexedMap drawGrid 
+          <| Array.toList model.grid),
+      [
+        div [] [ text ("Turn : " ++ (turnToString model.turn))],
+        div [] [ text (winnerToString model.winner model.grid)],
+        button [ onClick Reset ] [ text "Reset" ]
+      ]
     ])
