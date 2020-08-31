@@ -15,19 +15,22 @@ type GridElement = Empty | Cross | Circle
 type Turn = Circles | Crosses 
 type Winner = CircleWinner | CrossWinner | NoWinner
 type alias GridElements = Array GridElement
-type alias Model = { turn: Turn, winner : Winner, crossWins : Int, circlesWins : Int , grid : GridElements}
+type alias Model = { turn: Turn, initialTurn: Turn, winner : Winner, crossWins : Int, circlesWins : Int , grid : GridElements}
 type alias WinningPositions = List (List Int)
 
 init : Model
-init = Model Circles NoWinner 0 0 (Array.fromList 
+init = Model Circles Circles NoWinner 0 0 (Array.fromList 
                         ([Empty, Empty, Empty,
                           Empty, Empty, Empty,
                           Empty, Empty, Empty ]))
 
-reset model = Model Circles NoWinner model.crossWins model.circlesWins (Array.fromList 
-                        ([Empty, Empty, Empty,
-                          Empty, Empty, Empty,
-                          Empty, Empty, Empty ]))
+reset model = 
+  let initialTurn =  if model.initialTurn == Crosses then Circles else Crosses
+  in
+    Model initialTurn initialTurn NoWinner model.crossWins model.circlesWins (Array.fromList 
+                                                                            ([Empty, Empty, Empty,
+                                                                              Empty, Empty, Empty,
+                                                                              Empty, Empty, Empty ]))
 
 winningPositions : WinningPositions
 winningPositions = [[1, 5, 9], [3, 5, 7], --diagonals
