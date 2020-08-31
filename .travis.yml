@@ -2,6 +2,8 @@ language: elm
 elm:
   - elm0.19.0
 script:
+  - rm -rf ~/.elm
+  - rm -rf ./elm-stuff
   - elm make src/Main.elm 
   - cp -a src/. ./
 deploy:
