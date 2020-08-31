@@ -25,10 +25,9 @@ init = Model Circles NoWinner (Array.fromList
                           Empty, Empty, Empty ]))
 
 winningPositions : WinningPositions
-winningPositions = [[1, 5, 9], [3, 7, 9], 
-                    [1, 2, 3], [4, 5, 6], 
-                    [7, 8, 9], [1, 4, 7], 
-                    [2, 5, 8], [3, 6, 7]]
+winningPositions = [[1, 5, 9], [3, 5, 7], --diagonals
+                    [1, 2, 3], [4, 5, 6], [7, 8, 9], -- horizontal
+                    [1, 4, 7], [2, 5, 8], [3, 6, 9]] -- vertical
 
 -- UPDATE
 type Msg
@@ -65,7 +64,7 @@ update msg model =
         if circleTurn && isSlotEmpty && not hasAnybodyWon then
           model 
                 |> (\m -> {m | turn = Crosses, grid = (Array.set i Circle m.grid)}) --update the grid
-                |> (\m -> {m | winner = (checkWon Circle CircleWinner m.grid)})     --
+                |> (\m -> {m | winner = (checkWon Circle CircleWinner m.grid)})     --update the winner
 
         else if isSlotEmpty && not hasAnybodyWon then
            model 
@@ -99,11 +98,25 @@ turnToString turn =
     Circles -> "Circles"
     Crosses -> "Crosses" 
 
-winnerToString winner =
-  case winner of
-    NoWinner -> "Nobody"
-    CircleWinner -> "Circles"
-    CrossWinner -> "Crosses"    
+gridFull grid = 
+  List.all (\e -> e /= Empty) (Array.toList grid)
+
+winnerToString winner grid  =
+  let gridfull = (gridFull grid)
+  in
+   "Winner : " ++
+    if not gridfull then
+      case winner of
+        NoWinner -> ""
+        CircleWinner -> "Circles"
+        CrossWinner -> "Crosses"
+    else if gridfull then
+      case winner of
+        NoWinner -> "No Winner"
+        CircleWinner -> "Circles"
+        CrossWinner -> "Crosses"
+    else 
+      "No Winner"        
 
 view : Model -> Html Msg
 view model =
@@ -114,6 +127,6 @@ view model =
         <| Array.toList model.grid)
     [
       div [] [ text ("Turn : " ++ (turnToString model.turn))],
-      div [] [ text ("Winner : " ++ (winnerToString model.winner))],
+      div [] [ text (winnerToString model.winner model.grid)],
       button [ onClick Reset ] [ text "Reset" ]
     ])
